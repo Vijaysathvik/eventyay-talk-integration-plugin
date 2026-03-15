@@ -1,0 +1,229 @@
+{% extends "pretixcontrol/base.html" %}
+{% load i18n %}
+{% load eti_tags %}
+
+{% block title %}{% trans "Integration Plugin Settings" %} — {{ request.event.name }}{% endblock %}
+
+{% block content %}
+<h1>{% trans "Integration Plugin Settings" %}</h1>
+<p class="text-muted">
+  {% blocktrans trimmed %}
+  All integration logic lives in this plugin — no core eventyay code is
+  modified. Disable any feature by toggling it off below; disable the entire
+  plugin under Event → Settings → Plugins.
+  {% endblocktrans %}
+</p>
+
+<form action="" method="post" class="form-horizontal">
+  {% csrf_token %}
+
+  {% if form.non_field_errors %}
+  <div class="alert alert-danger">
+    {{ form.non_field_errors }}
+  </div>
+  {% endif %}
+
+  {% if form._warnings %}
+  {% for warning in form._warnings %}
+  <div class="alert alert-warning">
+    <strong>{% trans "Warning:" %}</strong> {{ warning }}
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  {# ── Talk → Video Sync ── #}
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        {% trans "Talk → Video Sync" %}
+        {% if form.instance.video_sync_enabled %}
+          <span class="label label-success pull-right">{% trans "Active" %}</span>
+        {% else %}
+          <span class="label label-default pull-right">{% trans "Disabled" %}</span>
+        {% endif %}
+      </h3>
+    </div>
+    <div class="panel-body">
+      <p class="help-block">
+        {% blocktrans trimmed %}
+        Automatically mirrors Talk sessions as video rooms. On each session
+        save the plugin creates or updates the corresponding room and — if
+        enabled — injects the speaker's profile into the room metadata.
+        {% endblocktrans %}
+      </p>
+      <div class="form-group{% if form.video_sync_enabled.errors %} has-error{% endif %}">
+        <label class="col-md-3 control-label">{{ form.video_sync_enabled.label }}</label>
+        <div class="col-md-9">
+          {{ form.video_sync_enabled }}
+          {% if form.video_sync_enabled.help_text %}
+          <span class="help-block">{{ form.video_sync_enabled.help_text }}</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="form-group{% if form.video_sync_mode.errors %} has-error{% endif %}">
+        <label class="col-md-3 control-label">{{ form.video_sync_mode.label }}</label>
+        <div class="col-md-9">
+          {{ form.video_sync_mode }}
+        </div>
+      </div>
+      <div class="form-group{% if form.inject_speaker_profile.errors %} has-error{% endif %}">
+        <label class="col-md-3 control-label">{{ form.inject_speaker_profile.label }}</label>
+        <div class="col-md-9">
+          {{ form.inject_speaker_profile }}
+          {% if form.inject_speaker_profile.help_text %}
+          <span class="help-block">{{ form.inject_speaker_profile.help_text }}</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# ── Ticket Access Gate ── #}
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        {% trans "Ticket Access Gate" %}
+        {% if form.instance.ticket_gate_enabled %}
+          <span class="label label-success pull-right">{% trans "Active" %}</span>
+        {% else %}
+          <span class="label label-default pull-right">{% trans "Disabled" %}</span>
+        {% endif %}
+      </h3>
+    </div>
+    <div class="panel-body">
+      <p class="help-block">
+        {% blocktrans trimmed %}
+        When enabled, attendees are checked for a valid ticket before they
+        can join any video room. Uses the scoped OrderPosition check from
+        PR #2356 (merged) to ensure ticket uniqueness is enforced per event.
+        {% endblocktrans %}
+      </p>
+      <div class="form-group{% if form.ticket_gate_enabled.errors %} has-error{% endif %}">
+        <label class="col-md-3 control-label">{{ form.ticket_gate_enabled.label }}</label>
+        <div class="col-md-9">
+          {{ form.ticket_gate_enabled }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# ── Navigation Visibility ── #}
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">{% trans "Navigation Visibility" %}</h3>
+    </div>
+    <div class="panel-body">
+      <p class="help-block">
+        {% blocktrans trimmed %}
+        Extends the label customisation from issue #2482 with full show/hide
+        control over each component's nav entry.  The {% templatetag openblock %} eti_nav_items {% templatetag closeblock %} tag
+        reads these settings and injects only the enabled items.
+        {% endblocktrans %}
+      </p>
+      {% for field_name in "show_tickets_in_nav,show_video_in_nav,tickets_nav_label"|split:"," %}
+      {% with field=form|getitem:field_name %}
+      <div class="form-group{% if field.errors %} has-error{% endif %}">
+        <label class="col-md-3 control-label">{{ field.label }}</label>
+        <div class="col-md-9">
+          {{ field }}
+          {% if field.help_text %}
+          <span class="help-block">{{ field.help_text }}</span>
+          {% endif %}
+          {% if field.errors %}
+          <span class="help-block text-danger">{{ field.errors }}</span>
+          {% endif %}
+        </div>
+      </div>
+      {% endwith %}
+      {% endfor %}
+    </div>
+  </div>
+
+  {# ── MC Assignment ── #}
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        {% trans "MC Assignment" %}
+        {% if form.instance.mc_notifications_enabled %}
+          <span class="label label-success pull-right">{% trans "Notifications on" %}</span>
+        {% else %}
+          <span class="label label-default pull-right">{% trans "Notifications off" %}</span>
+        {% endif %}
+      </h3>
+    </div>
+    <div class="panel-body">
+      <div class="form-group">
+        <label class="col-md-3 control-label">{{ form.mc_notifications_enabled.label }}</label>
+        <div class="col-md-9">{{ form.mc_notifications_enabled }}</div>
+      </div>
+      <div class="form-group">
+        <label class="col-md-3 control-label">{{ form.mc_permission_level.label }}</label>
+        <div class="col-md-9">{{ form.mc_permission_level }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-group submit-group">
+    <button type="submit" class="btn btn-primary btn-save">
+      {% trans "Save settings" %}
+    </button>
+  </div>
+
+</form>
+
+{# ── Sync log ── #}
+{% if sync_log_entries %}
+<div class="panel panel-default" style="margin-top:2rem">
+  <div class="panel-heading">
+    <h3 class="panel-title">{% trans "Recent sync activity" %}</h3>
+  </div>
+  <table class="table table-condensed table-striped">
+    <thead>
+      <tr>
+        <th>{% trans "Time" %}</th>
+        <th>{% trans "Level" %}</th>
+        <th>{% trans "Action" %}</th>
+        <th>{% trans "Message" %}</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for entry in sync_log_entries %}
+      <tr>
+        <td><small>{{ entry.timestamp|date:"d M H:i" }}</small></td>
+        <td>
+          {% if entry.level == "error" %}
+            <span class="label label-danger">{{ entry.get_level_display }}</span>
+          {% elif entry.level == "warn" %}
+            <span class="label label-warning">{{ entry.get_level_display }}</span>
+          {% else %}
+            <span class="label label-info">{{ entry.get_level_display }}</span>
+          {% endif %}
+        </td>
+        <td><code>{{ entry.action }}</code></td>
+        <td>{{ entry.message|truncatechars:120 }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{# ── Vue admin panel mount point ── #}
+<div
+  id="plugin-admin-root"
+  data-event-slug="{{ request.event.slug }}"
+></div>
+{% endblock %}
+
+{% block javascript %}
+{{ block.super }}
+{#
+  Load the compiled Vue plugin bundle. In development this is served by
+  Vite; in production it's collected via manage.py collectstatic from
+  eventyay_talk_integration/static/eventyay_talk_integration/dist/.
+#}
+<script
+  type="module"
+  src="{{ STATIC_URL }}eventyay_talk_integration/dist/plugin-admin.js"
+></script>
+{% endblock %}
