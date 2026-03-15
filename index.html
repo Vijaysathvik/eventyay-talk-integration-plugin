@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eventyay Integration Plugin · Showcase</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --color-primary: #6366f1;
+            --color-primary-hover: #4f46e5;
+            --color-bg: #0f172a;
+            --color-text: #f8fafc;
+            --color-text-muted: #94a3b8;
+            --font-main: 'Inter', system-ui, sans-serif;
+            --font-display: 'Outfit', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            font-family: var(--font-main);
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.2) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(236, 72, 153, 0.15) 0%, transparent 40%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero {
+            max-width: 800px;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            color: var(--color-primary);
+            border-radius: 99px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        h1 {
+            font-family: var(--font-display);
+            font-size: 4rem;
+            margin: 0 0 1.5rem;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.1;
+        }
+
+        p {
+            font-size: 1.25rem;
+            color: var(--color-text-muted);
+            line-height: 1.6;
+            margin-bottom: 3rem;
+        }
+
+        .cta-group {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-primary {
+            background: var(--color-primary);
+            color: white;
+            box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            background: var(--color-primary-hover);
+            box-shadow: 0 20px 30px -10px rgba(99, 102, 241, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 5rem;
+            text-align: left;
+        }
+
+        .feature-card {
+            padding: 1.5rem;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .feature-icon {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .feature-title {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .feature-desc {
+            font-size: 0.875rem;
+            color: var(--color-text-muted);
+            line-height: 1.4;
+        }
+
+        @media (max-width: 640px) {
+            h1 { font-size: 2.5rem; }
+            .features { grid-template-columns: 1fr; }
+            .cta-group { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <span class="badge">GSoC 2026 Proposal #3 Showcase</span>
+        <h1>Talk & Tickets<br>Integration Plugin</h1>
+        <p>A modular, signal-driven integration layer for eventyay. Connecting independent components through a clean, plugin-based architecture.</p>
+        
+        <div class="cta-group">
+            <a href="demo/" class="btn btn-primary">Launch Interactive Demo</a>
+            <a href="https://github.com/Vijaysathvik/eventyay-talk-integration-plugin" class="btn btn-secondary">View Repository</a>
+        </div>
+
+        <div class="features">
+            <div class="feature-card">
+                <span class="feature-icon">🔌</span>
+                <span class="feature-title">Modular Architecture</span>
+                <span class="feature-desc">Self-contained Django app with zero core code modifications.</span>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">📡</span>
+                <span class="feature-title">Signal Driven</span>
+                <span class="feature-desc">Real-time sync between Talk and Video components via Django signals.</span>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">Vue 3</span>
+                <span class="feature-title">Modern Frontend</span>
+                <span class="feature-desc">Clean, reactive admin panels built with Vue 3 and Pinia.</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

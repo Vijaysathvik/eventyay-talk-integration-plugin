@@ -1,20 +1,8 @@
-"""
-admin.py — Django admin registration for the integration plugin
-================================================================
-Three model admins:
-  IntegrationSettingsAdmin  — per-event feature toggles
-  MCAssignmentAdmin         — assign/view MC assignments
-  SyncLogAdmin              — read-only audit trail
-
-The SyncLogAdmin is intentionally locked down: log records are written
-exclusively by sync.py and notifications.py, never by an admin user.
-Allowing edits would break the audit guarantee.
-"""
 
 from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-
+from django.utils import timezone
 from .models import IntegrationSettings, MCAssignment, SyncLog
 
 # Colour map for the level badge in the sync log list view.

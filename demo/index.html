@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eventyay Integration Plugin · Interactive Demo</title>
+    <meta name="description" content="Interactive demo of the eventyay Talk-Tickets-Video integration plugin admin panel — GSoC 2026 Project #3">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Vue 3 + Pinia CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://unpkg.com/vue-demi"></script>
+    <script src="https://unpkg.com/pinia"></script>
+
+    <style>
+        /* ── Design Tokens ── */
+        :root {
+            --c-bg: #0f172a;
+            --c-surface: rgba(30, 41, 59, 0.75);
+            --c-border: rgba(255, 255, 255, 0.08);
+            --c-border-hover: rgba(255, 255, 255, 0.18);
+            --c-text: #f1f5f9;
+            --c-muted: #94a3b8;
+            --c-primary: #6366f1;
+            --c-primary-glow: rgba(99, 102, 241, 0.35);
+            --c-success: #22c55e;
+            --c-error: #ef4444;
+            --c-warn: #f59e0b;
+            --font: 'Inter', system-ui, sans-serif;
+            --font-display: 'Outfit', sans-serif;
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        /* ── Reset & Base ── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: var(--font);
+            background: var(--c-bg);
+            color: var(--c-text);
+            min-height: 100vh;
+            background-image:
+                radial-gradient(ellipse at 10% 0%, rgba(99,102,241,0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at 90% 100%, rgba(236,72,153,0.08) 0%, transparent 50%);
+        }
+        #app { max-width: 1140px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+        /* ── Top Bar ── */
+        .top-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem;
+        }
+        .top-bar h1 {
+            font-family: var(--font-display); font-size: 1.75rem; font-weight: 700;
+            background: linear-gradient(135deg, #fff 0%, var(--c-muted) 100%);
+            background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .slug {
+            font-family: 'Courier New', monospace; font-size: 0.8rem;
+            background: rgba(99,102,241,0.12); color: var(--c-primary);
+            padding: 2px 8px; border-radius: 6px; margin-left: 0.75rem;
+        }
+        .top-actions { display: flex; gap: 0.75rem; }
+
+        /* ── Buttons ── */
+        .btn {
+            padding: 0.5rem 1.25rem; border-radius: var(--radius-sm); font-weight: 600;
+            font-size: 0.875rem; cursor: pointer; border: none; font-family: var(--font);
+            transition: all 0.2s ease;
+        }
+        .btn-primary { background: var(--c-primary); color: #fff; }
+        .btn-primary:hover { background: #4f46e5; box-shadow: 0 4px 20px var(--c-primary-glow); }
+        .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+        .btn-ghost { background: rgba(255,255,255,0.06); color: var(--c-text); border: 1px solid var(--c-border); }
+        .btn-ghost:hover { background: rgba(255,255,255,0.1); }
+        .btn-ghost:disabled { opacity: 0.45; cursor: not-allowed; }
+
+        /* ── Stats Row ── */
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2.5rem; }
+        .stat-card {
+            background: var(--c-surface); backdrop-filter: blur(12px);
+            border: 1px solid var(--c-border); border-radius: var(--radius);
+            padding: 1.25rem 1.5rem;
+            transition: transform 0.2s, border-color 0.25s;
+        }
+        .stat-card:hover { transform: translateY(-3px); border-color: var(--c-primary); }
+        .stat-label { font-size: 0.8rem; color: var(--c-muted); margin-bottom: 0.35rem; }
+        .stat-value { font-size: 1.75rem; font-weight: 700; font-family: var(--font-display); }
+        .stat-sub { font-size: 0.7rem; color: var(--c-success); margin-top: 0.15rem; }
+
+        /* ── Section Card ── */
+        .card {
+            background: var(--c-surface); backdrop-filter: blur(12px);
+            border: 1px solid var(--c-border); border-radius: var(--radius);
+            padding: 1.75rem; margin-bottom: 2rem;
+        }
+        .card h2 { font-family: var(--font-display); font-size: 1.35rem; margin-bottom: 0.35rem; }
+        .card-desc { color: var(--c-muted); font-size: 0.875rem; margin-bottom: 1.5rem; line-height: 1.5; }
+
+        /* ── Integration Card ── */
+        .int-card {
+            border: 1px solid var(--c-border); border-radius: var(--radius-sm);
+            padding: 1rem 1.25rem; margin-bottom: 0.75rem;
+            transition: border-color 0.2s;
+        }
+        .int-card.active { border-left: 3px solid var(--c-success); }
+        .int-header { display: flex; align-items: flex-start; gap: 0.75rem; }
+        .int-icon { font-size: 1.5rem; flex-shrink: 0; }
+        .int-meta { flex: 1; }
+        .int-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 0.2rem; }
+        .int-desc { font-size: 0.8rem; color: var(--c-muted); line-height: 1.4; }
+        .int-controls { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+        .badge { font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
+        .badge-on { background: rgba(34,197,94,0.15); color: var(--c-success); }
+        .badge-off { background: rgba(148,163,184,0.1); color: var(--c-muted); }
+
+        /* ── Toggle ── */
+        .toggle { appearance: none; width: 42px; height: 22px; border-radius: 11px; background: #334155;
+            border: none; cursor: pointer; position: relative; transition: background 0.2s; flex-shrink: 0; }
+        .toggle:checked { background: var(--c-success); }
+        .toggle::before { content:''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px;
+            background: #fff; border-radius: 50%; transition: transform 0.2s; }
+        .toggle:checked::before { transform: translateX(20px); }
+
+        /* ── Config Row ── */
+        .cfg-row { display: flex; align-items: center; justify-content: space-between;
+            padding: 0.85rem 0; border-top: 1px solid var(--c-border); }
+        .cfg-label { font-weight: 600; font-size: 0.875rem; }
+        .cfg-help { font-size: 0.75rem; color: var(--c-muted); }
+        .cfg-row select, .cfg-row input[type=text] {
+            background: rgba(255,255,255,0.06); border: 1px solid var(--c-border);
+            color: var(--c-text); padding: 0.35rem 0.6rem; border-radius: 6px;
+            font-size: 0.8rem; font-family: var(--font);
+        }
+
+        /* ── Session Table ── */
+        .filters { display: flex; gap: 0.4rem; margin-bottom: 1rem; flex-wrap: wrap; }
+        .pill { padding: 3px 12px; border-radius: 12px; border: 1px solid var(--c-border);
+            background: transparent; color: var(--c-muted); font-size: 0.8rem; cursor: pointer;
+            transition: all 0.15s; }
+        .pill:hover { background: rgba(255,255,255,0.05); }
+        .pill.on { background: var(--c-primary); color: #fff; border-color: var(--c-primary); }
+
+        .tbl { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .tbl th { font-weight: 600; padding: 6px 8px; border-bottom: 2px solid var(--c-border); text-align: left; white-space: nowrap; color: var(--c-muted); }
+        .tbl td { padding: 8px; border-bottom: 1px solid var(--c-border); vertical-align: middle; }
+        .tbl tr:hover { background: rgba(255,255,255,0.03); }
+
+        .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+        .dot-live { background: var(--c-error); box-shadow: 0 0 6px rgba(239,68,68,0.5); }
+        .dot-upcoming { background: var(--c-success); }
+        .dot-ended { background: #64748b; }
+
+        .track-tag { font-size: 0.7rem; padding: 1px 7px; border-radius: 10px; background: rgba(99,102,241,0.15); color: #818cf8; }
+        .sync-ok { color: var(--c-success); font-weight: 700; }
+        .sync-no { color: #475569; }
+        .gate-tag { font-size: 0.7rem; padding: 1px 7px; border-radius: 10px; background: rgba(245,158,11,0.15); color: var(--c-warn); }
+
+        /* ── Sync Log Toast ── */
+        .toast {
+            position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 100;
+            background: rgba(30,41,59,0.95); backdrop-filter: blur(16px);
+            border: 1px solid var(--c-success); border-radius: var(--radius-sm);
+            padding: 0.75rem 1.25rem; font-size: 0.85rem; color: var(--c-success);
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ── Back Link ── */
+        .back-link { display: inline-block; margin-bottom: 1.5rem; color: var(--c-muted); text-decoration: none; font-size: 0.85rem; transition: color 0.15s; }
+        .back-link:hover { color: var(--c-text); }
+
+        /* ── Responsive ── */
+        @media (max-width: 640px) {
+            .top-bar { flex-direction: column; align-items: flex-start; }
+            .tbl { font-size: 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <!-- Back link -->
+    <a href="../" class="back-link">← Back to overview</a>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div>
+            <h1>Integration Plugin <span class="slug">{{ eventSlug }}</span></h1>
+        </div>
+        <div class="top-actions">
+            <button class="btn btn-ghost" :disabled="syncing" @click="doSync">
+                {{ syncing ? '↻ Syncing…' : '↻ Sync now' }}
+            </button>
+            <button class="btn btn-primary" :disabled="!dirty || saving" @click="doSave">
+                {{ saving ? 'Saving…' : 'Save settings' }}
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-label">Talk sessions</div>
+            <div class="stat-value">{{ sessions.length }}</div>
+            <div class="stat-sub">{{ liveSessions.length }} live</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Synced rooms</div>
+            <div class="stat-value">{{ syncedRooms }}</div>
+            <div class="stat-sub">Video rooms created</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Active integrations</div>
+            <div class="stat-value">{{ activeCount }}</div>
+            <div class="stat-sub">of 4 available</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Last sync</div>
+            <div class="stat-value">{{ lastSync || 'Never' }}</div>
+        </div>
+    </div>
+
+    <!-- Integrations -->
+    <div class="card">
+        <h2>Integrations</h2>
+        <p class="card-desc">Toggle integrations on or off. Changes take effect immediately. No core eventyay code is modified — all logic lives in this plugin.</p>
+
+        <!-- Video Sync -->
+        <div class="int-card" :class="{ active: s.video_sync_enabled }">
+            <div class="int-header">
+                <span class="int-icon">🎥</span>
+                <div class="int-meta">
+                    <div class="int-title">Talk → Video Sync</div>
+                    <div class="int-desc">Auto-creates video rooms from Talk sessions. Pushes session title, description, and speaker profile into each room.</div>
+                </div>
+                <div class="int-controls">
+                    <span class="badge" :class="s.video_sync_enabled ? 'badge-on' : 'badge-off'">{{ s.video_sync_enabled ? 'Active' : 'Disabled' }}</span>
+                    <input type="checkbox" class="toggle" v-model="s.video_sync_enabled" @change="dirty=true">
+                </div>
+            </div>
+            <template v-if="s.video_sync_enabled">
+                <div class="cfg-row">
+                    <div><span class="cfg-label">Inject speaker profiles</span><br><span class="cfg-help">Show speaker bio and photo in video room</span></div>
+                    <input type="checkbox" class="toggle" v-model="s.inject_speaker_profile" @change="dirty=true">
+                </div>
+                <div class="cfg-row">
+                    <div><span class="cfg-label">Sync mode</span><br><span class="cfg-help">When Talk changes propagate to Video</span></div>
+                    <select v-model="s.video_sync_mode" @change="dirty=true">
+                        <option value="realtime">Real-time (on save)</option>
+                        <option value="periodic">Periodic (5 min)</option>
+                        <option value="manual">Manual only</option>
+                    </select>
+                </div>
+            </template>
+        </div>
+
+        <!-- Ticket Gate -->
+        <div class="int-card" :class="{ active: s.ticket_gate_enabled }">
+            <div class="int-header">
+                <span class="int-icon">🎫</span>
+                <div class="int-meta">
+                    <div class="int-title">Ticket Access Gate</div>
+                    <div class="int-desc">Requires a valid ticket purchase to join video rooms. Validates against the Tickets component on join.</div>
+                </div>
+                <div class="int-controls">
+                    <span class="badge" :class="s.ticket_gate_enabled ? 'badge-on' : 'badge-off'">{{ s.ticket_gate_enabled ? 'Active' : 'Disabled' }}</span>
+                    <input type="checkbox" class="toggle" v-model="s.ticket_gate_enabled" @change="dirty=true">
+                </div>
+            </div>
+        </div>
+
+        <!-- Speaker API -->
+        <div class="int-card" :class="{ active: s.inject_speaker_profile }">
+            <div class="int-header">
+                <span class="int-icon">👤</span>
+                <div class="int-meta">
+                    <div class="int-title">Speaker API Bridge</div>
+                    <div class="int-desc">Exposes Talk speaker profiles via REST API so Video and Tickets components can display speaker data cross-component.</div>
+                </div>
+                <div class="int-controls">
+                    <span class="badge" :class="s.inject_speaker_profile ? 'badge-on' : 'badge-off'">{{ s.inject_speaker_profile ? 'Active' : 'Disabled' }}</span>
+                    <input type="checkbox" class="toggle" v-model="s.inject_speaker_profile" @change="dirty=true">
+                </div>
+            </div>
+        </div>
+
+        <!-- MC Assignment -->
+        <div class="int-card" :class="{ active: s.mc_notifications_enabled }">
+            <div class="int-header">
+                <span class="int-icon">🎙️</span>
+                <div class="int-meta">
+                    <div class="int-title">MC Assignment</div>
+                    <div class="int-desc">Assign team members as MCs to video rooms with role-based permissions and automatic email notifications.</div>
+                </div>
+                <div class="int-controls">
+                    <span class="badge" :class="s.mc_notifications_enabled ? 'badge-on' : 'badge-off'">{{ s.mc_notifications_enabled ? 'Active' : 'Disabled' }}</span>
+                    <input type="checkbox" class="toggle" v-model="s.mc_notifications_enabled" @change="dirty=true">
+                </div>
+            </div>
+            <template v-if="s.mc_notifications_enabled">
+                <div class="cfg-row">
+                    <div><span class="cfg-label">MC permission level</span><br><span class="cfg-help">What assigned MCs can do in their rooms</span></div>
+                    <select v-model="s.mc_permission_level" @change="dirty=true">
+                        <option value="view">View only</option>
+                        <option value="moderate">Moderate (mute/kick)</option>
+                        <option value="host">Host (full control)</option>
+                    </select>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- Navigation Visibility -->
+    <div class="card">
+        <h2>Navigation visibility</h2>
+        <p class="card-desc">Control which components appear in the public event navigation. Extends label customization with full show/hide per component.</p>
+        <div class="cfg-row">
+            <div><span class="cfg-label">Show Tickets in nav</span><br><span class="cfg-help">Display Tickets link in public navigation</span></div>
+            <input type="checkbox" class="toggle" v-model="s.show_tickets_in_nav" @change="dirty=true">
+        </div>
+        <div class="cfg-row">
+            <div><span class="cfg-label">Show Join Online Video</span><br><span class="cfg-help">Display video join link in public navigation</span></div>
+            <input type="checkbox" class="toggle" v-model="s.show_video_in_nav" @change="dirty=true">
+        </div>
+        <div class="cfg-row">
+            <div><span class="cfg-label">Custom Tickets label</span><br><span class="cfg-help">Leave blank to use default "Tickets"</span></div>
+            <input type="text" v-model="s.tickets_nav_label" placeholder="e.g. Buy tickets" @input="dirty=true">
+        </div>
+    </div>
+
+    <!-- Sessions · sync status -->
+    <div class="card">
+        <h2>Sessions · sync status</h2>
+        <div class="filters">
+            <button v-for="f in filters" :key="f" class="pill" :class="{ on: activeFilter === f }" @click="activeFilter = f">{{ f }}</button>
+        </div>
+        <table class="tbl">
+            <thead>
+                <tr>
+                    <th style="width:24px"></th>
+                    <th>Time</th>
+                    <th>Session</th>
+                    <th>Speaker</th>
+                    <th>Track</th>
+                    <th title="Video room linked">Video</th>
+                    <th title="Ticket gate">Gate</th>
+                    <th title="MC assigned">MC</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="sess in filteredSessions" :key="sess.id">
+                    <td><span class="dot" :class="'dot-' + sess.status" :title="sess.status"></span></td>
+                    <td><small>{{ fmtTime(sess.start) }}</small></td>
+                    <td>{{ sess.title }}</td>
+                    <td>{{ sess.speaker_name || '—' }}</td>
+                    <td><span v-if="sess.track" class="track-tag">{{ sess.track }}</span><span v-else style="color:var(--c-muted)">—</span></td>
+                    <td><span :class="sess.video_room_id ? 'sync-ok' : 'sync-no'">{{ sess.video_room_id ? '✓' : '×' }}</span></td>
+                    <td><span v-if="s.ticket_gate_enabled" class="gate-tag">active</span><span v-else style="color:var(--c-muted)">off</span></td>
+                    <td>{{ sess.mc_name || '—' }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Sync Toast -->
+    <div class="toast" v-if="toastMsg">✓ {{ toastMsg }}</div>
+</div>
+
+<script>
+const { createApp, ref, reactive, computed } = Vue;
+
+const app = createApp({
+    setup() {
+        const eventSlug = 'fossasia-summit-2026';
+
+        // ── Settings (reactive) ──
+        const s = reactive({
+            video_sync_enabled: true,
+            inject_speaker_profile: true,
+            video_sync_mode: 'realtime',
+            ticket_gate_enabled: false,
+            show_tickets_in_nav: true,
+            show_video_in_nav: true,
+            tickets_nav_label: 'Attendee Tickets',
+            mc_notifications_enabled: true,
+            mc_permission_level: 'moderate',
+        });
+
+        const dirty = ref(false);
+        const saving = ref(false);
+        const syncing = ref(false);
+        const lastSync = ref(null);
+        const toastMsg = ref('');
+
+        // ── Sessions (mock data) ──
+        const sessions = ref([
+            { id: 1, title: 'Opening Keynote: The Future of eventyay', speaker_name: 'Hong Phuc Dang', status: 'live', track: 'Main', start: new Date().toISOString(), video_room_id: 'room-101', mc_name: 'Alex Chen', abstract: 'The future of open-source event management.' },
+            { id: 2, title: 'Plugin Architecture Deep Dive', speaker_name: 'Mario Behling', status: 'upcoming', track: 'Workshop', start: new Date(Date.now() + 3600000).toISOString(), video_room_id: null, mc_name: null, abstract: 'How to build modular plugins for eventyay.' },
+            { id: 3, title: 'Real-time Sync with Django Signals', speaker_name: 'Alice Wong', status: 'ended', track: 'Lightning', start: new Date(Date.now() - 7200000).toISOString(), video_room_id: 'room-202', mc_name: null, abstract: 'Signal-driven data movement patterns.' },
+            { id: 4, title: 'Vue 3 Composition API in Practice', speaker_name: 'John Smith', status: 'upcoming', track: 'Main', start: new Date(Date.now() + 7200000).toISOString(), video_room_id: 'room-303', mc_name: 'Sam Lee', abstract: 'Pinia stores, composables, and reactive patterns.' },
+            { id: 5, title: 'Ticket Gating Implementation', speaker_name: 'Priya Sharma', status: 'upcoming', track: 'Workshop', start: new Date(Date.now() + 10800000).toISOString(), video_room_id: null, mc_name: null, abstract: 'Securing video access with ticket verification.' },
+        ]);
+
+        // ── Computed ──
+        const liveSessions = computed(() => sessions.value.filter(s => s.status === 'live'));
+        const syncedRooms = computed(() => sessions.value.filter(s => s.video_room_id).length);
+        const activeCount = computed(() => {
+            let n = 0;
+            if (s.video_sync_enabled) n++;
+            if (s.ticket_gate_enabled) n++;
+            if (s.inject_speaker_profile) n++;
+            if (s.mc_notifications_enabled) n++;
+            return n;
+        });
+
+        // ── Filters ──
+        const filters = ['All', 'Main', 'Workshop', 'Lightning'];
+        const activeFilter = ref('All');
+        const filteredSessions = computed(() => {
+            if (activeFilter.value === 'All') return sessions.value;
+            return sessions.value.filter(sess => sess.track === activeFilter.value);
+        });
+
+        // ── Actions ──
+        function showToast(msg) {
+            toastMsg.value = msg;
+            setTimeout(() => toastMsg.value = '', 3000);
+        }
+
+        async function doSync() {
+            syncing.value = true;
+            await delay(800);
+            // Simulate syncing unsynced sessions
+            sessions.value = sessions.value.map(sess => ({
+                ...sess,
+                video_room_id: sess.video_room_id || `room-${100 + Math.floor(Math.random() * 900)}`
+            }));
+            lastSync.value = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+            syncing.value = false;
+            showToast(`Synced ${sessions.value.length} sessions → Video rooms`);
+        }
+
+        async function doSave() {
+            saving.value = true;
+            await delay(500);
+            dirty.value = false;
+            saving.value = false;
+            showToast('Settings saved successfully');
+        }
+
+        function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        function fmtTime(iso) {
+            if (!iso) return '—';
+            return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        return {
+            eventSlug, s, dirty, saving, syncing, lastSync, toastMsg,
+            sessions, liveSessions, syncedRooms, activeCount,
+            filters, activeFilter, filteredSessions,
+            doSync, doSave, fmtTime,
+        };
+    }
+});
+
+app.mount('#app');
+</script>
+</body>
+</html>
