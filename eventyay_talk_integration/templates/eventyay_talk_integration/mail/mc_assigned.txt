@@ -1,0 +1,26 @@
+Hi {{ mc_name }},
+
+You have been assigned as Master of Ceremony (MC) for the following session
+at {{ event.name }}.
+
+  Session:    {{ session_title }}
+  Room ID:    {{ video_room_id }}
+  Assigned:   {{ assigned_at }}
+  Permission: {{ permission_level }}
+
+What you can do at this permission level:
+{{ permission_description }}
+
+--
+
+If you have questions about this assignment or need your permission level
+adjusted, the event organiser can update it at:
+
+  {{ settings_url }}
+
+Please do not reply to this email — it was sent automatically by the
+eventyay integration plugin.
+
+--
+{{ event.name }}
+Powered by eventyay
