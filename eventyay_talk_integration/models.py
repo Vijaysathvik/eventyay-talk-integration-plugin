@@ -1,13 +1,14 @@
 """
-models.py — Plugin configuration model
-========================================
-IntegrationSettings stores per-event plugin configuration.
-Organisers toggle features here via the admin UI.
-All fields default to safe values so existing events are unaffected
-when the plugin is first installed.
+models.py — Plugin configuration models
+=========================================
+Three models:
+  IntegrationSettings  — per-event feature toggles (OneToOne with Event)
+  MCAssignment         — assigns a team member as MC to a video room
+  SyncLog              — append-only audit trail for all sync operations
 """
 
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 
@@ -120,7 +121,10 @@ class MCAssignment(models.Model):
         on_delete=models.CASCADE,
         related_name="mc_assignments",
     )
-    video_room_id = models.CharField(max_length=200, verbose_name=_("Video room ID"))
+    video_room_id = models.CharField(
+        max_length=200,
+        verbose_name=_("Video room ID"),
+    )
     team_member = models.ForeignKey(
         "eventyay.TeamMember",
         on_delete=models.CASCADE,
@@ -128,6 +132,16 @@ class MCAssignment(models.Model):
         verbose_name=_("MC"),
     )
     session_title = models.CharField(max_length=300, blank=True)
+    permission_level = models.CharField(
+        max_length=20,
+        choices=[
+            ("view", _("View only")),
+            ("moderate", _("Moderate (mute/kick)")),
+            ("host", _("Host (full control)")),
+        ],
+        default="moderate",
+        verbose_name=_("Permission level"),
+    )
     assigned_at = models.DateTimeField(auto_now_add=True)
     notified = models.BooleanField(default=False)
 
@@ -138,3 +152,55 @@ class MCAssignment(models.Model):
 
     def __str__(self):
         return f"MC: {self.team_member} → {self.session_title}"
+
+
+class SyncLog(models.Model):
+    """
+    Append-only audit trail for all sync operations.
+    Written by sync.py and notifications.py — never by admin users directly.
+    """
+
+    event = models.ForeignKey(
+        "eventyay.Event",
+        on_delete=models.CASCADE,
+        related_name="integration_sync_logs",
+    )
+    timestamp = models.DateTimeField(
+        default=timezone.now,
+        db_index=True,
+        verbose_name=_("Timestamp"),
+    )
+    level = models.CharField(
+        max_length=10,
+        choices=[
+            ("info", _("Info")),
+            ("warn", _("Warning")),
+            ("error", _("Error")),
+        ],
+        default="info",
+        db_index=True,
+        verbose_name=_("Level"),
+    )
+    action = models.CharField(
+        max_length=100,
+        verbose_name=_("Action"),
+    )
+    message = models.TextField(verbose_name=_("Message"))
+    session_id = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name=_("Session ID"),
+    )
+    video_room_id = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name=_("Video room ID"),
+    )
+
+    class Meta:
+        ordering = ["-timestamp"]
+        verbose_name = _("Sync Log")
+        verbose_name_plural = _("Sync Logs")
+
+    def __str__(self):
+        return f"[{self.level}] {self.action} @ {self.timestamp:%Y-%m-%d %H:%M}"
